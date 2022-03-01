@@ -6,8 +6,8 @@ import requests
 from .utils.credit_notes_tools import create_credit_note_request_obj
 
 
-unleashed_api_key = "wxkI3HUObJvZGwvuqD2Q0bfa8cTL0hOZ8cSsEJqvvEVgANtAxKRRKAdDCvA6wiZbJVf1IAY4LmhrHB3VsTNw=="
-unleashed_api_id = "e82aef74-5d53-4ff1-9fa7-ec3ed7b3a4e6"
+unleashed_api_key = "unleashedapisecretkey=="
+unleashed_api_id = "unleashed-api-id-9fa7"
 
 
 # main function to send a get request to retrieve data from unleashed API
