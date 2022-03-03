@@ -1,4 +1,4 @@
-service: EP(credit-notes)
+service: EP-credit-notes
 
 provider:
   name: aws
