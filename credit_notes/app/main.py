@@ -29,6 +29,7 @@ app.add_middleware(
 # Routes
 @app.post("/api/create-credit", status_code=201)
 async def home(request: Request):
+    import ipdb; ipdb.set_trace()
     # Unpack JSON request data
     try:
         client_data = await request.json() or json.loads(request['body'])

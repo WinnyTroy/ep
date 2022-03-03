@@ -44,8 +44,9 @@ def get_single_unleashed_customer_details(name):
 	'''
 	url_param = f"customerName={name}"
 	url_base = "Customers"
-	unleashed_json = unleashed_api_get_request(
-										url_base, url_param , request_method="get")
+	unleashed_json = unleashed_api_get_request(url_base,
+												url_param,
+												request_method="get")
 	return unleashed_json
 
 def create_credit_note(client_code, product_code, warehouse_code, credit_amount):
