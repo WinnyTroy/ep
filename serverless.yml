@@ -1,0 +1,34 @@
+service: EP(credit-notes)
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: stage
+  region: eu-central-1
+  lambdaHashingVersion: 20201221
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  individually: true
+
+functions:
+  maarifaAPILambda:
+    name: maarifa-serverless
+    handler: credit_notes.app.main.handler
+    description: Unleashed Credit Notes generator
+    timeout: 5 # seconds
+    memorySize: 1500 # mb
+    events:
+      - http: ANY /api/create-credit
+      - http:
+          path: /{proxy+}
+          method: ANY
+    package:
+      patterns:
+        - "!node_modules/**"
+        - "!yarn.lock"
+        - "!package-lock.json"
+        - "!package.json"
+        - "!.pytest_cache"
