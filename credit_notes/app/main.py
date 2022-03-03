@@ -52,7 +52,7 @@ async def home(request: Request):
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
 
-    # Default the warehouse to Wells Fargo
+    # Default the warehouse to Wells Fargo Warehouse
     warehouse_code = 'f8027663-364d-4325-a0f9-518e095aa0da'
 
     response_object = create_credit_note(client_code,

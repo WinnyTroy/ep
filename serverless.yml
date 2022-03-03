@@ -21,7 +21,7 @@ functions:
     timeout: 5 # seconds
     memorySize: 1500 # mb
     events:
-      - http: ANY /api/create-credit
+      - http: ANY /create-credit
       - http:
           path: /{proxy+}
           method: ANY
