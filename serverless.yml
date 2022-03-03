@@ -5,7 +5,7 @@ provider:
   runtime: python3.9
   stage: stage
   region: eu-central-1
-  lambdaHashingVersion: 20201221
+  lambdaHashingVersion: 20220303
 
 plugins:
   - serverless-python-requirements
@@ -17,7 +17,7 @@ functions:
   EPAPI:
     name: EP-serverless
     handler: credit_notes.app.main.handler
-    description: Unleashed Credit Notes generator
+    description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
     events:
