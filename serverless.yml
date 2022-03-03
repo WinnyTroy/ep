@@ -15,7 +15,7 @@ package:
 
 functions:
   maarifaAPILambda:
-    name: maarifa-serverless
+    name: EP-serverless
     handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes generator
     timeout: 5 # seconds
