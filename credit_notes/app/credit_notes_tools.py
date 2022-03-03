@@ -65,6 +65,8 @@ def create_credit_note(client_code, product_code, warehouse_code, credit_amount)
 	request_data["CreditLines"][0]['CreditPrice'] = credit_amount
 	request_data["CreditLines"][0]["Product"]["Guid"] = product_code
 	unleashed_credit_note_json = unleashed_api_get_request(url_base,
-																url_param, request_method, request_data)
+															url_param,
+															request_method,
+															request_data)
 
 	return unleashed_credit_note_json
