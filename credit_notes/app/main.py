@@ -65,4 +65,4 @@ async def home(request: Request):
 
     return response_object
 
-handler = Mangum(app=app, spec_version=2)
+handler = Mangum(app=app, spec_version=1)
