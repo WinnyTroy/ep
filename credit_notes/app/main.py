@@ -26,10 +26,7 @@ app.add_middleware(
                    "Access-Control-Allow-Origin"],
 )
 
-# AWS Lambda FastApi Adapter
-handler = Mangum(app)
-
-
+# Routes
 @app.post("/api/create-credit", status_code=201)
 async def home(request: Request):
     # Unpack JSON request data
@@ -65,4 +62,5 @@ async def home(request: Request):
 
     return response_object
 
-handler = Mangum(app=app, spec_version=1)
+# AWS Lambda FastApi Adapter
+handler = Mangum(app=app, spec_version=2)
