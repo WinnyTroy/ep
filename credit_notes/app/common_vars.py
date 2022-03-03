@@ -3,8 +3,8 @@ import datetime
 
 create_credit_note_request_obj = {
     "Comment": None,
-    "CreditDate": datetime.now(),
-    "ExchangeRate": 1, # default this to 1
+    "CreditDate": datetime.datetime.now().strftime("%Y-%d-%m"),
+    "ExchangeRate": 1,  # default this to 1
     "Reference": None,
     "Warehouse": {
       "Guid": ''
@@ -14,11 +14,11 @@ create_credit_note_request_obj = {
     },
     "CreditLines": [
       {
-        "CreditQuantity": 1, # default product quantity to 1
+        "CreditQuantity": 1,  # default product quantity to 1
         "CreditPrice": '',
         "Reason": "Credit",
-        "Return": False,     # No returns for financing component
-        "Comments": "CLIENT FREE CREDIT VIA API",
+        "Return": False,  # No returns for financing component
+        "Comments": "UNLEASHED API FREE TYPE CREDIT",
         "Product": {
           "Guid": '',
           "ProductCode": "financing_component"
