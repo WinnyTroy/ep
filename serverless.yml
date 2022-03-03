@@ -14,7 +14,7 @@ package:
   individually: true
 
 functions:
-  maarifaAPILambda:
+  EPAPILambda:
     name: EP-serverless
     handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes generator
