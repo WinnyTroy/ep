@@ -16,15 +16,18 @@ package:
 functions:
   EPAPI:
     name: EP-serverless
+    CodeUri: credit_notes
     handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
     events:
-      - http: ANY /create-credit
       - http:
           path: /{proxy+}
           method: ANY
+      - http:
+          path: /api/create-credit
+          method: POST
     package:
       patterns:
         - "!node_modules/**"

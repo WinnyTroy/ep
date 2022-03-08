@@ -42,7 +42,7 @@ def get_single_unleashed_customer_details(name):
 	'''
 	retrieve single customer details.
 	'''
-	url_param = f"customerName={name}"
+	url_param = f"customerCode={name}"
 	url_base = "Customers"
 	unleashed_json = unleashed_api_get_request(url_base,
 												url_param,

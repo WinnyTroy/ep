@@ -2,6 +2,7 @@
 Initialization for the EP python application
 '''
 import ast
+from http.client import HTTPException
 import json
 from mangum import Mangum
 from fastapi import FastAPI
@@ -44,10 +45,13 @@ async def home(request: Request):
 
     # Fetching client by client name for now
     unleashed_client = get_single_unleashed_customer_details(
-                        name="JOSEPH NZAVI")
+                        name=client_id)
 
     # Get unleashed client guid
-    client_code = unleashed_client["Items"][0]["Guid"]
+    try:
+        client_code = unleashed_client["Items"][0]["Guid"]
+    except KeyError:
+        raise HTTPException(f"Client id {client_id} does not exist in Unleashed.")
 
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
