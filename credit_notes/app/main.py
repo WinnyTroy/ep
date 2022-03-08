@@ -9,8 +9,8 @@ from fastapi import FastAPI
 from fastapi import Request
 from json import JSONDecodeError
 from starlette.middleware.cors import CORSMiddleware
-from .credit_notes_tools import (create_credit_note,
-                                 get_single_unleashed_customer_details)
+from .utils.credit_notes_tools import (create_credit_note,
+                                       get_single_unleashed_customer_details)
 
 app = FastAPI(title="EP",
               version=1,
@@ -51,7 +51,9 @@ async def home(request: Request):
     try:
         client_code = unleashed_client["Items"][0]["Guid"]
     except KeyError:
-        raise HTTPException(f"Client id {client_id} does not exist in Unleashed.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Client id {client_id} does not exist in Unleashed.")
 
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
