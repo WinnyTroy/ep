@@ -4,8 +4,7 @@ import base64
 import hashlib
 import requests
 from .common_vars import create_credit_note_request_obj
-from ..settings.dev_settings import unleashed_api_id, unleashed_api_key
-
+from credit_notes.app.settings import settings
 
 # main function interacting with unleashed API
 def unleashed_api_get_request(url_base, url_param,
@@ -15,7 +14,7 @@ def unleashed_api_get_request(url_base, url_param,
     url = "https://api.unleashedsoftware.com/" + url_base
     if url_param:
         url += '?' + url_param
-    signature = hmac.new(unleashed_api_key.encode(
+    signature = hmac.new(settings.unleashed_api_key.encode(
                                             'utf-8'), url_param.encode(
                                                 'utf-8'), hashlib.sha256)
     # Create auth token using url params and api key
@@ -24,7 +23,7 @@ def unleashed_api_get_request(url_base, url_param,
     # set request headers
     headers = {
             'Accept': 'application/json',
-            'api-auth-id': unleashed_api_id,
+            'api-auth-id': settings.unleashed_api_id,
             'api-auth-signature': auth_token64.decode("utf-8"),
             'Content-Type': 'application/json'
     }
@@ -55,7 +54,7 @@ def get_single_unleashed_customer_details(name):
 
 
 def create_credit_note(client_code, product_code,
-                       warehouse_code, credit_amount):
+                       warehouse_code, credit_amount, credit_reason):
     '''
     Create free type credit note.
     '''
@@ -71,6 +70,7 @@ def create_credit_note(client_code, product_code,
     request_data["Customer"]["Guid"] = client_code
     request_data["CreditLines"][0]['CreditPrice'] = credit_amount
     request_data["CreditLines"][0]["Product"]["Guid"] = product_code
+    request_data["CreditLines"][0]["Comments"] = credit_reason
     unleashed_credit_note_json = unleashed_api_get_request(url_base,
                                                            url_param,
                                                            request_method,

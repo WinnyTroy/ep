@@ -2,20 +2,23 @@
 Initialization for the EP python application
 '''
 import ast
-from http.client import HTTPException
 import json
+import sentry_sdk
 from mangum import Mangum
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi import Request
 from json import JSONDecodeError
+from credit_notes.app.settings import settings
 from starlette.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from .utils.credit_notes_tools import (create_credit_note,
                                        get_single_unleashed_customer_details)
 
-app = FastAPI(title="EP",
-              version=1,
-              root_path="/dev/")
+app = FastAPI(title=settings.app_name,
+              version=settings.app_version,
+              root_path=settings.app_root_path)
 
+# Include middlewares
 app.add_middleware(
     CORSMiddleware,
     allow_origins='*',
@@ -26,8 +29,11 @@ app.add_middleware(
                    "X-Amz-Date",
                    "Access-Control-Allow-Origin"],
 )
+if settings.sentry_dsn:
+    sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
+    app.add_middleware(SentryAsgiMiddleware)
 
-# Routes
+# Include Routes
 @app.post("/api/create-credit", status_code=201)
 async def home(request: Request):
     # Unpack JSON request data
@@ -42,18 +48,20 @@ async def home(request: Request):
 
     client_id = client_data['client_id']
     credit_amount = client_data['amount']
+    credit_reason = client_data['comments']
 
     # Fetching client by client name for now
     unleashed_client = get_single_unleashed_customer_details(
                         name=client_id)
 
-    # Get unleashed client guid
-    try:
-        client_code = unleashed_client["Items"][0]["Guid"]
-    except KeyError:
+    # Handle Non existent Unleashed clients
+    if unleashed_client['Pagination']['NumberOfItems'] == 0:
         raise HTTPException(
             status_code=404,
-            detail=f"Client id {client_id} does not exist in Unleashed.")
+            detail=f"Client id `{client_id}` does not exist in Unleashed.")
+    else:
+        # Get unleashed client guid
+        client_code = unleashed_client["Items"][0]["Guid"]
 
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
@@ -61,10 +69,9 @@ async def home(request: Request):
     # Default the warehouse to Wells Fargo Warehouse
     warehouse_code = 'f8027663-364d-4325-a0f9-518e095aa0da'
 
-    response_object = create_credit_note(client_code,
-                                         product_code,
-                                         warehouse_code,
-                                         credit_amount)
+    response_object = create_credit_note(client_code, product_code,
+                                         warehouse_code, credit_amount,
+                                         credit_reason)
 
     return response_object
 

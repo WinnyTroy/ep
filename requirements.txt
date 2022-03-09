@@ -4,3 +4,5 @@ mangum==0.12.3
 pytest==6.2.5
 uvicorn==0.15.0
 requests
+sentry-sdk
+pytest
