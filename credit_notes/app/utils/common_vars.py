@@ -3,7 +3,7 @@ import datetime
 
 create_credit_note_request_obj = {
     "Comment": None,
-    "CreditDate": datetime.datetime.now().strftime("%Y-%d-%m"),
+    "CreditDate": datetime.datetime.now().strftime("%Y-%m-%d"),
     "ExchangeRate": 1,  # default this to 1
     "Reference": None,
     "Warehouse": {
