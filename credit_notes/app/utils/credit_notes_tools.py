@@ -32,10 +32,12 @@ def unleashed_api_get_request(url_base, url_param,
         unleashed_data = requests.request(request_method,
                                           data=json.dumps(request_data),
                                           url=url, headers=headers)
+        print(f'Credit Note created from unleashed >>>>>>>>>>> {unleashed_data}')
     else:
         unleashed_data = requests.request(request_method,
                                           url=url,
                                           headers=headers)
+        print(f'Credit Note created from unleashed >>>>>>>>>>> {unleashed_data}')
     # convert json to dict
     unleashed_json = json.loads(unleashed_data.content)
     return unleashed_json

@@ -46,6 +46,7 @@ async def home(request: Request):
         user_data = client_data.decode("UTF-8")
         client_data = ast.literal_eval(user_data)
 
+    print(f'Received request data >>>>>>>>>>> {client_data}')
     client_id = client_data['client_id']
     credit_amount = client_data['amount']
     credit_reason = client_data['comments']
@@ -62,6 +63,7 @@ async def home(request: Request):
     else:
         # Get unleashed client guid
         client_code = unleashed_client["Items"][0]["Guid"]
+        print(f'Client fetched from Unleashed >>>>>>>>>>> {unleashed_client}')
 
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
