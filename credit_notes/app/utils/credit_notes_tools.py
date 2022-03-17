@@ -38,6 +38,7 @@ def unleashed_api_get_request(url_base, url_param,
                                           url=url,
                                           headers=headers)
         print(f'Credit Note created from unleashed >>>>>>>>>>> {unleashed_data}')
+        print(f'Credit Note created from unleashed >>>>>>>>>>> {json.loads(unleashed_data.content)}')
     # convert json to dict
     unleashed_json = json.loads(unleashed_data.content)
     return unleashed_json
