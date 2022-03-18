@@ -47,9 +47,13 @@ async def home(request: Request):
         client_data = ast.literal_eval(user_data)
 
     print(f'Received request data >>>>>>>>>>> {client_data}')
-    client_id = client_data['client_id']
-    credit_amount = client_data['amount']
-    credit_reason = client_data['comments']
+    client_id = int(client_data.get('client_id', ''))
+    credit_amount = float(client_data.get('amount', ''))
+
+    # Unpack AMT comment data
+    credit_reason = client_data.get('comments', '')
+    if isinstance(credit_reason, dict):
+        credit_reason = client_data["comments"]["payplanData"]["note"]
 
     # Fetching client by client name for now
     unleashed_client = get_single_unleashed_customer_details(
