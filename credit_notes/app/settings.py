@@ -1,4 +1,6 @@
+import urllib.parse
 from pydantic import BaseSettings
+from .local_settings import settings
 
 
 class Settings(BaseSettings):
@@ -16,6 +18,12 @@ class Settings(BaseSettings):
     unleashed_api_id = "e82aef74-5d53-4ff1-9fa7-ec3ed7b3a4e6"
     unleashed_url = "https://api.unleashedsoftware.com/"
     # Database
-    database_url = "sqlite:///./credit_notes_app.db"
+    db_user = 'middleware_user'
+    db_password = 'DoK@#laV236!an'
+    parsed_db_password = urllib.parse.quote(db_password)
+    db_host = 'sunculture-production.cigs2xzvtic5.eu-central-1.rds.amazonaws.com'
+    db_port = 3306
+    db_name = 'sunculture_main'
+    database_url = f"mysql+pymysql://{db_user}:{parsed_db_password}@{db_host}:{db_port}/{db_name}"
 
 settings = Settings()
