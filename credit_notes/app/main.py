@@ -13,11 +13,7 @@ from .database import create_db_and_tables
 from credit_notes.app.settings import settings
 from starlette.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-from .utils.credit_notes_tools import (create_credit_note,
-                                       get_single_unleashed_customer_details,
-                                       fetch_client_existing_interest_invoices,
-                                       aggregate_existing_credit)
-from .utils.db_connections_utils import create_unleashed_credit_note_record
+from .utils.credit_notes_tools import confirm_existing_user_credit
 
 # ELK for access logging
 logging.basicConfig(filename="logFile.txt",
@@ -75,49 +71,16 @@ async def home(request: Request):
     if isinstance(credit_reason, dict):
         credit_reason = client_data["comments"]["payplanData"]["note"]
 
+    if credit_amount < 0:
+        # Generate debit Note on Unleashed
+        perform_unleashed_create_debit_note(client)
+
     # Capture existing interest invoices
-    existing_client_interest_invoices = fetch_client_existing_interest_invoices(client_id)
-    if isinstance(existing_client_interest_invoices, HTTPException):
-        return existing_client_interest_invoices
     # Counter check existing client credit amount
-    aggregated_credit_value = aggregate_existing_credit(
-        existing_client_interest_invoices,
-        credit_amount)
-    if aggregated_credit_value < 0:
-            return HTTPException(
-                status_code=422 ,
-                detail=f"Bad Request - Client {client_id}'s existing"\
-                    f" credit value is {aggregated_credit_value}")
-
-    # Fetching client by client id
-    # if client_credit_value is greater than 0
-    unleashed_client = get_single_unleashed_customer_details(
-                        name=client_id)
-
-    # Handle Non existent Unleashed clients
-    if unleashed_client['Pagination']['NumberOfItems'] == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Client id `{client_id}` does not exist in Unleashed.")
-    else:
-        # Get unleashed client guid
-        client_code = unleashed_client["Items"][0]["Guid"]
-        print(f'Client fetched from Unleashed >>>>>>>>>>> {unleashed_client}')
-        logging.debug(f'Retrieved Unleashed client - {unleashed_client}')
-        # apm.capture_message(f'Retrieved Unleashed client - {unleashed_client}')
-
-    # Default the product to the fincancing component
-    product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
-
-    # Default the warehouse to Wells Fargo Warehouse
-    warehouse_code = 'f8027663-364d-4325-a0f9-518e095aa0da'
-
-    # Persist Credit Note details in SUnculture Main DB
-    create_unleashed_credit_note_record()
-
-    response_object = create_credit_note(client_code, product_code,
-                                         warehouse_code, credit_amount,
-                                         credit_reason)
+    response_object = confirm_existing_user_credit(
+        client_id,
+        credit_amount,
+        credit_reason)
 
     return response_object
 

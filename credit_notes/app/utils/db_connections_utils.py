@@ -8,11 +8,20 @@ from sqlmodel import Session, select, or_
 # Intialize database session per single thread
 session = Session(engine)
 
-def create_unleashed_credit_note_record():
-    client_record = Installations()
-    pass
+def create_unleashed_credit_note_record(db_user_installations, credit_amount,
+                                        created_unleashed_credit_note):
+    created_credit_note = Installations(
+        installation_id = db_user_installations.installation_id,
+        type = 'Credit Note',
+        unleashed_number=created_unleashed_credit_note['CreditNoteNumber'],
+        item_code = 'financing_component',
+        quantity = 1,
+        item_price=credit_amount)
+    session.add(created_credit_note)
+    session.commit()
+    return created_credit_note.invoice_cn_id
 
-def get_saved_user(client_id):
+def query_db_user_record(client_id):
     try:
         db_accounts = session.exec(
             select(Accounts).where(
