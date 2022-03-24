@@ -35,3 +35,7 @@ functions:
         - "!package-lock.json"
         - "!package.json"
         - "!.pytest_cache"
+        - "!__pycache__"
+        - "!.pre-commit-config.yaml"
+        - "!.flake8"
+
