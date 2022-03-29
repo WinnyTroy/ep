@@ -1,3 +1,4 @@
+from http import client
 from fastapi import HTTPException
 from ..models import (Accounts,
                       Installations,
@@ -40,10 +41,9 @@ def query_user_existing_installations(db_user_installations):
         or_(Installations.item_code=="InterestPiece",
             Installations.item_code=="financing_component"))).all()
     if not client_installations:
-        return HTTPException(
-                status_code=404 ,
-                detail=f"Bad Request - Client {db_user_installations}'s "\
-                "Does not have a record on the `sc_installation_unleashed_contents` table")
+        # Return single list where
+        # item price is detaulted to 0
+        client_installations = [{"item_price": 0}]
     return client_installations
 
 

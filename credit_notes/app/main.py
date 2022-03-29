@@ -48,6 +48,9 @@ app.add_middleware(
 def on_startup():
     create_db_and_tables()
 
+# AWS Lambda FastApi Adapter
+handler = Mangum(app=app)
+
 # Include Routes
 @app.post("/api/create-credit", status_code=201)
 async def home(request: Request):
@@ -71,9 +74,9 @@ async def home(request: Request):
     if isinstance(credit_reason, dict):
         credit_reason = client_data["comments"]["payplanData"]["note"]
 
-    if credit_amount < 0:
-        # Generate debit Note on Unleashed
-        perform_unleashed_create_debit_note(client)
+    # if credit_amount < 0:
+    #     # Generate debit Note on Unleashed
+    #     perform_unleashed_create_debit_note(client)
 
     # Capture existing interest invoices
     # Counter check existing client credit amount
@@ -83,6 +86,3 @@ async def home(request: Request):
         credit_reason)
 
     return response_object
-
-# AWS Lambda FastApi Adapter
-handler = Mangum(app=app, spec_version=2)

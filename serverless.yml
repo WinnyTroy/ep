@@ -6,6 +6,8 @@ provider:
   stage: stage
   region: eu-central-1
   lambdaHashingVersion: 20220303
+  memorySize: 256
+  timeout: 30
 
 plugins:
   - serverless-python-requirements
@@ -15,12 +17,13 @@ package:
 
 functions:
   EPAPI:
-    name: EP-serverless
-    CodeUri: credit_notes
-    handler: credit_notes.app.main.handler
+    name: containerized-ep-credit-notes-api
+    # CodeUri: credit_notes
+    # handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
+    image: 016340991174.dkr.ecr.eu-central-1.amazonaws.com/ep-credit-notes@sha256:076ad3caac43bb8107a1a71aec9f819f1787ae88f2fc106b7591240c6da10bf1
     events:
       - http:
           path: /{proxy+}
