@@ -18,8 +18,8 @@ package:
 functions:
   EPAPI:
     name: containerized-ep-credit-notes-api
-    # CodeUri: credit_notes
-    # handler: credit_notes.app.main.handler
+    CodeUri: credit_notes
+    handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
