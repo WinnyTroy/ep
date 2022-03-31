@@ -23,10 +23,7 @@ functions:
     timeout: 5 # seconds
     memorySize: 1500 # mb
     image: 016340991174.dkr.ecr.eu-central-1.amazonaws.com/ep-credit-notes@sha256:53f0eda37588b26d2526f7b453a946487045a4e2a5303479e6aca42cd57d7c26
-    events:
-      - http:
-          path: /{proxy+}
-          method: ANY
+
     package:
       patterns:
         - "!node_modules/**"
