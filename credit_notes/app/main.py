@@ -10,7 +10,7 @@ from fastapi import Request
 from json import JSONDecodeError
 from fastapi import FastAPI, HTTPException
 from .database import create_db_and_tables
-from credit_notes.app.settings import settings
+from credit_notes.app.settings.settings import settings
 from starlette.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from .utils.credit_notes_tools import confirm_existing_user_credit
@@ -26,7 +26,7 @@ app = FastAPI(title=settings.app_name,
               version=settings.app_version,
               root_path=settings.app_root_path)
 
-###### Include monitoring stack #######
+#  ******* monitoring stack **********
 # Sentry for Error Logging
 if settings.sentry_dsn:
     sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
@@ -42,19 +42,16 @@ app.add_middleware(
                    "Content-Type",
                    "X-Amz-Date",
                    "Access-Control-Allow-Origin"])
-
 # Initialize application by connecting with Database
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
 
-# AWS Lambda FastApi Adapter
-handler = Mangum(app=app)
 
 # Include Routes
 @app.post("/api/create-credit", status_code=201)
 async def home(request: Request):
-    # Unpack JSON request data
+    # Unpack request data
     try:
         client_data = await request.json() or json.loads(request['body'])
     except (JSONDecodeError, KeyError):
@@ -62,27 +59,42 @@ async def home(request: Request):
 
     if isinstance(client_data, bytes):
         user_data = client_data.decode("UTF-8")
+        print(f'Received request data >>>>>>>>>>> {user_data}')
         client_data = ast.literal_eval(user_data)
     logging.debug(f'Request data received for current request- {client_data}')
     print(f'Received request data >>>>>>>>>>> {client_data}')
 
     client_id = int(client_data.get('client_id', ''))
     credit_amount = float(client_data.get('amount', ''))
-
+    client_name = str(client_data.get('customer_name', ''))
+    client_contact = int(client_data.get(
+                        'Customer Phone number',
+                        '0712354876'))
     # Unpack AMT comment data
     credit_reason = client_data.get('comments', '')
     if isinstance(credit_reason, dict):
         credit_reason = client_data["comments"]["payplanData"]["note"]
 
-    # if credit_amount < 0:
-    #     # Generate debit Note on Unleashed
-    #     perform_unleashed_create_debit_note(client)
+    # Determine action to be performed
+    # Based on the amount sent in request
+    if credit_amount < 0:
+        performing_action = 'Debit'
+    else:
+        performing_action = 'Credit'
 
-    # Capture existing interest invoices
-    # Counter check existing client credit amount
     response_object = confirm_existing_user_credit(
-        client_id,
-        credit_amount,
-        credit_reason)
+            client_id,
+            credit_amount,
+            credit_reason,
+            client_name,
+            client_contact,
+            performing_action=performing_action,)
+
+    if isinstance(response_object, HTTPException):
+        raise response_object
 
     return response_object
+
+
+# AWS Lambda FastApi Adapter
+handler = Mangum(app=app)

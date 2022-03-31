@@ -1,17 +1,16 @@
-from ast import If
 import json
 import hmac
 import base64
 import hashlib
 import logging
 import requests
+import datetime
 from fastapi import HTTPException
-from credit_notes.app.settings import settings
+from credit_notes.app.settings.settings import settings
 from .common_vars import create_credit_note_request_obj
-from ..utils.db_connections_utils import (query_db_user_record,
-                                         query_user_existing_installations,
-                                         query_user_installation_records,
-                                         create_unleashed_credit_note_record)
+from ..utils.db_connections_utils import (query_user_existing_installations,
+                                          create_unleashed_credit_note_record)
+
 
 # main function interacting with unleashed API
 def unleashed_api_get_request(url_base, url_param,
@@ -36,8 +35,8 @@ def unleashed_api_get_request(url_base, url_param,
     }
     # perform request
     unleashed_data = requests.request(request_method,
-                                        data=json.dumps(request_data),
-                                        url=url, headers=headers)
+                                      data=json.dumps(request_data),
+                                      url=url, headers=headers)
 
     if unleashed_data.status_code != 200:
         error_message = unleashed_data.json()['description']
@@ -48,6 +47,7 @@ def unleashed_api_get_request(url_base, url_param,
 
     unleashed_response = unleashed_data.json()
     return unleashed_response
+
 
 def get_single_unleashed_customer_details(name):
     '''
@@ -61,8 +61,10 @@ def get_single_unleashed_customer_details(name):
                                                request_method="get")
     return unleashed_json
 
-def perform_unleashed_create_credit_note(client_code, product_code,
-                       warehouse_code, credit_amount, credit_reason):
+
+def generate_unleashed_create_credit_note(client_code, product_code,
+                                          warehouse_code, credit_amount,
+                                          credit_reason):
     '''
     Create free type credit note.
     '''
@@ -86,7 +88,8 @@ def perform_unleashed_create_credit_note(client_code, product_code,
 
     return unleashed_credit_note_json
 
-def create_credit_note(client_id, credit_amount, credit_reason):
+
+def create_unleashed_credit_note(client_id, credit_amount, credit_reason):
     # Fetching client by client id
     # if client_credit_value is greater than 0
     unleashed_client = get_single_unleashed_customer_details(
@@ -102,7 +105,6 @@ def create_credit_note(client_id, credit_amount, credit_reason):
         client_code = unleashed_client["Items"][0]["Guid"]
         print(f'Client fetched from Unleashed >>>>>>>>>>> {unleashed_client}')
         logging.debug(f'Retrieved Unleashed client - {unleashed_client}')
-        # apm.capture_message(f'Retrieved Unleashed client - {unleashed_client}')
 
     # Default the product to the fincancing component
     product_code = 'f5f20ff7-ebf8-4196-b413-650f50582f8d'
@@ -110,10 +112,13 @@ def create_credit_note(client_id, credit_amount, credit_reason):
     # Default the warehouse to Wells Fargo Warehouse
     warehouse_code = 'f8027663-364d-4325-a0f9-518e095aa0da'
 
-    response_object = perform_unleashed_create_credit_note(client_code,
-                                        product_code, warehouse_code,
-                                        credit_amount,credit_reason)
+    response_object = generate_unleashed_create_credit_note(client_code,
+                                                            product_code,
+                                                            warehouse_code,
+                                                            credit_amount,
+                                                            credit_reason)
     return response_object
+
 
 def calculate_existing_credits(db_user_existing_credit_invoices):
     '''
@@ -124,66 +129,85 @@ def calculate_existing_credits(db_user_existing_credit_invoices):
             [item.item_price for item in db_user_existing_credit_invoices])
     else:
         # If only 1 existing credit invoice
-        aggregated_credit_sum = db_user_existing_credit_invoices[0]['item_price']  # noqa
+        aggregated_credit_sum = db_user_existing_credit_invoices[
+                                0]['item_price']  # noqa
     return aggregated_credit_sum
 
-def confirm_existing_user_credit(client_id, credit_amount, credit_reason):
-    '''
-    This function is used to determine if we should generate
-    an Unleashed Credit Note.
-    Params:
-        - client_id
-        - client_amount
-        - credit_reason
-    Returns:
-        - Unleashed credit json or
-        - HTTP Exception
-    '''
-    # Instantiate credit value to 0
-    existing_client_credit_value = 0
-    # Fetch user account from db
-    db_user_account = query_db_user_record(client_id=client_id)
-    # Query `Installations` if user account exists
-    if not isinstance(db_user_account, HTTPException):
-        db_user_installations = query_user_installation_records(
-            db_user_account_id=db_user_account)
-        # Query `Sunculture Unleashed Contents` if user account exists
-        if not isinstance(db_user_installations, HTTPException):
-            db_user_existing_credit_invoices = query_user_existing_installations(
-                db_user_installations=db_user_installations)
-            ###### Credit Aggregating section ######
-            # If we have more than one credit invoice
-            if not isinstance(db_user_existing_credit_invoices, HTTPException):
-                # Determine if we should generate credit note
-                aggregated_existing_credits = calculate_existing_credits(
-                    db_user_existing_credit_invoices)
 
-                if aggregated_existing_credits:
-                    existing_client_credit_value = aggregated_existing_credits - credit_amount  # noqa
-
-                if existing_client_credit_value < 0:
-                    # Generate debit Note on Unleashed
-                    return HTTPException(
-                        status_code=422 ,
-                        detail=f"Bad Request - Client {client_id}'s existing"\
-                            f" credit value is {existing_client_credit_value}")
-                # If existing credit note is greater than 0
-                # Generate Unleashed Credit Note
-                created_unleashed_credit_note = create_credit_note(client_id=client_id,
-                                                                   credit_amount=credit_amount,
-                                                                   credit_reason=credit_reason)
-                # Persist Data in unleashed Database
-                create_unleashed_credit_note_record(
-                    db_user_installations,
-                    credit_amount,
-                    created_unleashed_credit_note)
-                return created_unleashed_credit_note
-            return db_user_existing_credit_invoices
-        return db_user_installations
-    return db_user_account
-
-def perform_unleashed_create_debit_note():
+def confirm_existing_user_credit(client_id,
+                                 credit_amount,
+                                 credit_reason,
+                                 client_name,
+                                 client_contact,
+                                 performing_action):
     '''
-    Create Unleashed Debit Note
+    Used to determine if we should generate
+    an Unleashed Credit Note or Debit Note.
+    The Debit Note is basically an extra invoice
+    on Unleashed.
     '''
-    pass
+    # Query `Sunculture Unleashed Contents Table`
+    db_user_existing_credit_invoices = query_user_existing_installations(
+            user_account_ref=client_id)
+
+    # *************** Credit Aggregating section ***************
+    # Aggregate `item_price` field from
+    # data pulled from db
+    aggregated_existing_credit = calculate_existing_credits(
+        db_user_existing_credit_invoices)
+
+    # Deduct existing credit from amount sent in request
+    existing_client_credit_value = credit_amount - aggregated_existing_credit
+
+    if existing_client_credit_value > 0:
+        installation_id = db_user_existing_credit_invoices[0].installation_id
+        customer_id = db_user_existing_credit_invoices[0].customer_id
+        account_id = db_user_existing_credit_invoices[0].account_id
+        if performing_action == 'Credit':
+            create_credit_note(client_id, credit_amount, credit_reason,
+                               installation_id, account_id, customer_id)
+        elif performing_action == 'Debit':
+            perform_unleashed_create_debit_note(credit_amount, client_name,
+                                                client_contact,
+                                                installation_id,
+                                                account_id, customer_id)
+    else:
+        return HTTPException(
+            status_code=422,
+            detail=f"The account {client_id} does not have an subsequent Invoice")  # noqa
+
+
+def perform_unleashed_create_debit_note(credit_amount, client_name,
+                                        client_contact, installation_id,
+                                        account_id, customer_id):
+    invoice_url = settings.invoice_url
+    invoice_request_headers = {"Content-Type": "application/json"}
+    debit_request_data = {"installation_id": installation_id,
+                          "dispatch_data": datetime.now().strftime("%m/%d/%Y"),
+                          "customer_id": customer_id,
+                          "dispatch_type": "DebitNote",
+                          "account_id": account_id,
+                          "warehouse_code": "WF",
+                          "customer_names": client_name,
+                          "msisdn": client_contact,
+                          "debit_amount": credit_amount}
+    debit_note_invoice_number = requests.get(data=debit_request_data,
+                                             url=invoice_url,
+                                             headers=invoice_request_headers)
+    return debit_note_invoice_number
+
+
+def create_credit_note(client_id, credit_amount, credit_reason,
+                       installation_id, account_id, customer_id):
+    # Create credit Note on Unleashed
+    created_unleashed_credit_note = (
+        create_unleashed_credit_note(client_id=client_id,
+                                     credit_amount=credit_amount,
+                                     credit_reason=credit_reason))
+    # Persist Data in unleashed Database
+    create_unleashed_credit_note_record(
+        client_id, credit_amount,
+        created_unleashed_credit_note,
+        credit_reason, installation_id,
+        account_id, customer_id)
+    return created_unleashed_credit_note

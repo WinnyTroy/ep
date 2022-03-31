@@ -5,5 +5,5 @@ extend-ignore = E203, E266, E501
 max-line-length = 80
 max-complexity = 18
 select = B,C,E,F,W,T4,B9
-per-file-ignores =
-    ./credit_notes/app/settings/
+exclude =
+    credit_notes/app/settings/

@@ -4,10 +4,12 @@ import pytest
 from credit_notes.app.main import app
 from fastapi.testclient import TestClient
 
+
 @pytest.fixture(scope="module")
 def test_app():
     client = TestClient(app)
     yield client
+
 
 test_data = ('{"client_id": 10811332,'
              '"amount": 29698,'
@@ -30,6 +32,7 @@ test_data = ('{"client_id": 10811332,'
 #     assert request_data['client_id'] == int(resp.json()['Customer']['CustomerCode'])
 #     assert request_data['amount'] == float(resp.json()["CreditLines"][0]['CreditPrice'])
 #     assert request_data['comments'] == resp.json()["CreditLines"][0]['Comments']
+
 
 def test_no_unleashed_client_when_creating_credit_note(test_app):
     '''
