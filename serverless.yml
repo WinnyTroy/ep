@@ -5,7 +5,7 @@ provider:
   runtime: python3.9
   stage: stage
   region: eu-central-1
-  lambdaHashingVersion: 20220303
+  lambdaHashingVersion: 20201221
   memorySize: 256
   timeout: 30
 
@@ -18,7 +18,7 @@ package:
 functions:
   EPAPI:
     name: containerized-ep-credit-notes-api
-    CodeUri: credit_notes
+    # CodeUri: credit_notes
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
@@ -27,9 +27,6 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
-      - http:
-          path: /api/create-credit
-          method: POST
     package:
       patterns:
         - "!node_modules/**"
