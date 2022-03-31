@@ -50,7 +50,7 @@ provider:
   runtime: python3.9
   stage: stage
   region: eu-central-1
-  lambdaHashingVersion: 20220303
+  lambdaHashingVersion: 20201221
 
 plugins:
   - serverless-python-requirements
@@ -61,7 +61,7 @@ package:
 functions:
   EPAPI:
     name: EP-serverless
-    CodeUri: credit_notes
+    # CodeUri: credit_notes
     handler: credit_notes.app.main.handler
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
