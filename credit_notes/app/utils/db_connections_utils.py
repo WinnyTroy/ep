@@ -31,7 +31,7 @@ def query_user_existing_installations(user_account_ref):
     # Query db table `sc_installation_unleashed_contents`
     # for financing_component installations
     client_installations = session.exec(select(Installations).where(
-        Installations.account_ref == user_account_ref,
+        Installations.account_ref == str(user_account_ref),
         or_(Installations.item_code == "InterestPiece",
             Installations.item_code == "financing_component"))).all()
     if not client_installations:

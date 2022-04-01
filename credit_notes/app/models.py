@@ -15,4 +15,4 @@ class Installations(SQLModel, table=True):
     account_id: str = Field(nullable=True)
     account_ref: int = Field(nullable=True)
     customer_id: str = Field(nullable=True)
-    customer_identification: str = Field(nullable=True)
+    identification_number: str = Field(nullable=True)

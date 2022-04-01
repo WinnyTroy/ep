@@ -59,12 +59,12 @@ async def home(request: Request):
 
     if isinstance(client_data, bytes):
         user_data = client_data.decode("UTF-8")
-        print(f'Received request data >>>>>>>>>>> {user_data}')
         client_data = ast.literal_eval(user_data)
+        print(f'Received request data >>>>>>>>>>> {user_data}')
     logging.debug(f'Request data received for current request- {client_data}')
     print(f'Received request data >>>>>>>>>>> {client_data}')
 
-    client_id = int(client_data.get('client_id', ''))
+    client_id = str(client_data.get('client_id', ''))
     credit_amount = float(client_data.get('amount', ''))
     client_name = str(client_data.get('customer_name', ''))
     client_contact = int(client_data.get(
@@ -78,9 +78,9 @@ async def home(request: Request):
     # Determine action to be performed
     # Based on the amount sent in request
     if credit_amount < 0:
-        performing_action = 'Debit'
-    else:
         performing_action = 'Credit'
+    else:
+        performing_action = 'Debit'
 
     response_object = confirm_existing_user_credit(
             client_id,

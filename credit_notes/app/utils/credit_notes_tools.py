@@ -129,61 +129,21 @@ def calculate_existing_credits(db_user_existing_credit_invoices):
             [item.item_price for item in db_user_existing_credit_invoices])
     else:
         # If only 1 existing credit invoice
-        aggregated_credit_sum = db_user_existing_credit_invoices[
-                                0]['item_price']  # noqa
+        try:
+            aggregated_credit_sum = db_user_existing_credit_invoices[
+                                    0]['item_price']
+        except TypeError:
+            aggregated_credit_sum = db_user_existing_credit_invoices[0].item_price
     return aggregated_credit_sum
 
 
-def confirm_existing_user_credit(client_id,
-                                 credit_amount,
-                                 credit_reason,
-                                 client_name,
-                                 client_contact,
-                                 performing_action):
-    '''
-    Used to determine if we should generate
-    an Unleashed Credit Note or Debit Note.
-    The Debit Note is basically an extra invoice
-    on Unleashed.
-    '''
-    # Query `Sunculture Unleashed Contents Table`
-    db_user_existing_credit_invoices = query_user_existing_installations(
-            user_account_ref=client_id)
-
-    # *************** Credit Aggregating section ***************
-    # Aggregate `item_price` field from
-    # data pulled from db
-    aggregated_existing_credit = calculate_existing_credits(
-        db_user_existing_credit_invoices)
-
-    # Deduct existing credit from amount sent in request
-    existing_client_credit_value = credit_amount - aggregated_existing_credit
-
-    if existing_client_credit_value > 0:
-        installation_id = db_user_existing_credit_invoices[0].installation_id
-        customer_id = db_user_existing_credit_invoices[0].customer_id
-        account_id = db_user_existing_credit_invoices[0].account_id
-        if performing_action == 'Credit':
-            create_credit_note(client_id, credit_amount, credit_reason,
-                               installation_id, account_id, customer_id)
-        elif performing_action == 'Debit':
-            perform_unleashed_create_debit_note(credit_amount, client_name,
-                                                client_contact,
-                                                installation_id,
-                                                account_id, customer_id)
-    else:
-        return HTTPException(
-            status_code=422,
-            detail=f"The account {client_id} does not have an subsequent Invoice")  # noqa
-
-
-def perform_unleashed_create_debit_note(credit_amount, client_name,
-                                        client_contact, installation_id,
-                                        account_id, customer_id):
+def create_debit_note(credit_amount, client_name,
+                      client_contact, installation_id,
+                      account_id, customer_id):
     invoice_url = settings.invoice_url
     invoice_request_headers = {"Content-Type": "application/json"}
     debit_request_data = {"installation_id": installation_id,
-                          "dispatch_data": datetime.now().strftime("%m/%d/%Y"),
+                          "dispatch_data": datetime.datetime.now().strftime("%m/%d/%Y"),
                           "customer_id": customer_id,
                           "dispatch_type": "DebitNote",
                           "account_id": account_id,
@@ -206,8 +166,69 @@ def create_credit_note(client_id, credit_amount, credit_reason,
                                      credit_reason=credit_reason))
     # Persist Data in unleashed Database
     create_unleashed_credit_note_record(
-        client_id, credit_amount,
+        str(client_id), credit_amount,
         created_unleashed_credit_note,
         credit_reason, installation_id,
         account_id, customer_id)
     return created_unleashed_credit_note
+
+
+def confirm_existing_user_credit(client_id,
+                                 credit_amount,
+                                 credit_reason,
+                                 client_name,
+                                 client_contact,
+                                 performing_action):
+    '''
+    Used to determine if we should generate
+    an Unleashed Credit Note or Debit Note.
+    The Debit Note is basically an extra invoice
+    on Unleashed.
+    '''
+    # Query `Sunculture Unleashed Contents Table`
+    db_user_existing_credit_invoices = query_user_existing_installations(
+            user_account_ref=str(client_id))
+
+    # *************** Credit Aggregating section ***************
+    # Aggregate `item_price` field from
+    # data pulled from db
+    aggregated_existing_credit = calculate_existing_credits(
+        db_user_existing_credit_invoices)
+
+    # Deduct existing credit from amount sent in request
+    existing_client_credit_value = aggregated_existing_credit - credit_amount
+
+    if existing_client_credit_value > 0:
+        # wrap this in try except block to capture
+        # scenerios where user doesnt have dispatch
+        # data created in production database
+        try:
+            installation_id = db_user_existing_credit_invoices[0].installation_id
+            customer_id = db_user_existing_credit_invoices[0].customer_id
+            account_id = db_user_existing_credit_invoices[0].account_id
+            if performing_action == 'Credit':
+                str_credit_amount = str(credit_amount)
+                if str_credit_amount.startswith('-'):
+                    updated_credit_amount = str_credit_amount.replace("-", '')
+                else:
+                    updated_credit_amount = credit_amount
+                credit_note_details = create_credit_note(str(client_id),
+                                                         updated_credit_amount,
+                                                         credit_reason,
+                                                         installation_id,
+                                                         account_id,
+                                                         customer_id)
+                return credit_note_details
+            elif performing_action == 'Debit':
+                debit_note_details = create_debit_note(credit_amount, client_name,
+                                                       client_contact, installation_id,
+                                                       account_id, customer_id)
+                return debit_note_details
+        except AttributeError:
+            return HTTPException(
+                status_code=404,
+                detail=f"Client {client_id} dispatch information cannot be found.")
+    else:
+        return HTTPException(
+            status_code=400,
+            detail=f"The account {client_id} does not have an subsequent Invoice")
