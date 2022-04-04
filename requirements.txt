@@ -6,13 +6,3 @@ psycopg2-binary
 PyMySQL==1.0.2
 sqlmodel==0.0.4
 requests
-
-# black==22.1.0
-# pytest==6.2.5
-# sentry-sdk
-# ipdb
-# #  ******* monitoring stack **********
-# # Sentry for Error Logging
-# if settings.sentry_dsn:
-#     sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
-#     app.add_middleware(SentryAsgiMiddleware)
