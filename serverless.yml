@@ -1,19 +1,19 @@
-service: EP-credit-notes
+# service: EP-credit-notes
 
-provider:
-  name: aws
-  runtime: python3.9
-  stage: stage
-  region: eu-central-1
-  lambdaHashingVersion: 20201221
-  memorySize: 256
-  timeout: 30
+# provider:
+#   name: aws
+#   runtime: python3.9
+#   stage: stage
+#   region: eu-central-1
+#   lambdaHashingVersion: 20201221
+#   memorySize: 256
+#   timeout: 30
 
-plugins:
-  - serverless-python-requirements
+# plugins:
+#   - serverless-python-requirements
 
-package:
-  individually: true
+# package:
+  # individually: true
 
 # functions:
 #   EPAPI:
@@ -36,20 +36,20 @@ package:
 #         - "!.flake8"
 
 
-# service: EP-credit-notes
+service: EP-credit-notes
 
-# provider:
-#   name: aws
-#   runtime: python3.8
-#   stage: stage
-#   region: eu-central-1
-#   lambdaHashingVersion: 20201221
+provider:
+  name: aws
+  runtime: python3.8
+  stage: stage
+  region: eu-central-1
+  lambdaHashingVersion: 20201221
 
-# plugins:
-#   - serverless-python-requirements
+plugins:
+  - serverless-python-requirements
 
-# package:
-#   individually: true
+package:
+  individually: true
 
 functions:
   EPAPI:
