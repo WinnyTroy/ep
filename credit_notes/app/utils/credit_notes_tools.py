@@ -188,6 +188,7 @@ def confirm_existing_user_credit(client_id,
     # Query `Sunculture Unleashed Contents Table`
     db_user_existing_credit_invoices = query_user_existing_installations(
             user_account_ref=str(client_id))
+    print(f'Existing user invoices {db_user_existing_credit_invoices}')
 
     # *************** Credit Aggregating section ***************
     # Aggregate `item_price` field from
@@ -197,6 +198,10 @@ def confirm_existing_user_credit(client_id,
 
     # Deduct existing credit from amount sent in request
     existing_client_credit_value = aggregated_existing_credit - credit_amount
+    print(f'Pulled credits from db {aggregated_existing_credit}')
+    print(f'Credit amount from request {credit_amount}')
+    print(f'Remainder from deducting aggregated_existing_credit - credit_amount {existing_client_credit_value}')
+    print(f'Action to be performed {performing_action}')
 
     if existing_client_credit_value > 0:
         # wrap this in try except block to capture
