@@ -22,7 +22,7 @@ functions:
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
-    image: 016340991174.dkr.ecr.eu-central-1.amazonaws.com/ep-credit-notes@sha256:3779b66f62affe2909e6ea2afed1a2caaf08372f75190893788f11bfea66997b
+    image: 016340991174.dkr.ecr.eu-central-1.amazonaws.com/ep-credit-notes@sha256:4ba595f29518d311b44299fe50840b7531bc8b9441647dee6ed81e3a6f0ac961
 
     package:
       patterns:
