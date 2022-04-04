@@ -34,8 +34,8 @@ jobs:
             ${{ runner.os }}-venv-
       # Step 5
       - name: Activate and Install Depencies into Venv
-        run: python -m venv venv && source venv/bin/activate &&
-          python -m pip install --upgrade pip &&
+        run: python3 -m venv venv && source venv/bin/activate &&
+          python3 -m pip install --upgrade pip &&
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
