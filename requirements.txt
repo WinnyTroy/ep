@@ -6,7 +6,7 @@ mangum==0.11.0
 uvicorn==0.15.0
 requests
 sentry-sdk
-# psycopg2-binary
+psycopg2-binary
 PyMySQL==1.0.2
 sqlmodel==0.0.4
 # ipdb
