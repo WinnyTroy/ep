@@ -6,8 +6,8 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Install the function's dependencies using file requirements.txt
 # from your project folder.
 
-COPY requirements.txt  .
-RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+COPY dev-requirements.txt  .
+RUN  pip3 install -r dev-requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
 # Set the CMD to your handler
 CMD ["credit_notes.app.main.handler"]
