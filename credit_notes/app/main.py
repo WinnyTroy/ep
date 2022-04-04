@@ -26,12 +26,6 @@ app = FastAPI(title=settings.app_name,
               version=settings.app_version,
               root_path=settings.app_root_path)
 
-#  ******* monitoring stack **********
-# Sentry for Error Logging
-if settings.sentry_dsn:
-    sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
-    app.add_middleware(SentryAsgiMiddleware)
-
 # Include middlewares
 app.add_middleware(
     CORSMiddleware,
