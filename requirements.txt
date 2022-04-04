@@ -9,3 +9,4 @@ sentry-sdk
 psycopg2-binary
 PyMySQL==1.0.2
 sqlmodel==0.0.4
+ipdb
