@@ -36,7 +36,7 @@ jobs:
       - name: Activate and Install Depencies into Venv
         run: python3.8 -m venv venv && source venv/bin/activate &&
           python3.8 -m pip install --upgrade pip &&
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.txt ]; then pip install -r dev-requirements.txt; fi
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
       ####### CD ##########
