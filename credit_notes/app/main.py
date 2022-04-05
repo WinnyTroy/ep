@@ -26,6 +26,12 @@ app = FastAPI(title=settings.app_name,
               version=settings.app_version,
               root_path=settings.app_root_path)
 
+#  ******* monitoring stack **********
+# Sentry for Error Logging
+if settings.sentry_dsn:
+    sentry_sdk.init(dsn=settings.sentry_dsn, release=settings.app_version)
+    app.add_middleware(SentryAsgiMiddleware)
+
 # Include middlewares
 app.add_middleware(
     CORSMiddleware,
@@ -47,23 +53,20 @@ def on_startup():
 async def home(request: Request):
     # Unpack request data
     try:
-        # client_data = await request.json() or json.loads(request['body']) or request.scope['aws.event']
-        client_datas = request.scope['aws.event']['body']
+        client_data = await request.json() or json.loads(request['body'])
+        # handle aws lambda docker container requests
+        # client_data = request.scope['aws.event']
     except (JSONDecodeError, KeyError):
-        client_datas = await request.body()
+        client_data = await request.body()
 
-    print(f'Received request data >>>>>>>>>>> {client_datas}')
-    print(f'Request data >>>>>>>>>>>>> {type(client_datas)}')
-    if isinstance(client_datas, bytes):
-        user_data = client_datas.decode("UTF-8")
+    if isinstance(client_data, bytes):
+        user_data = client_data.decode("UTF-8")
         client_data = ast.literal_eval(user_data)
         print(f'Received request data >>>>>>>>>>> {user_data}')
-    elif isinstance(client_datas, str):
-        client_data = ast.literal_eval(client_datas)
     logging.debug(f'Request data received for current request- {client_data}')
+    print(f'Received request data >>>>>>>>>>> {client_data}')
 
     client_id = str(client_data.get('client_id', ''))
-    print(f'Client ID from client data >>>>>>>>>>> {client_id}')
     credit_amount = float(client_data.get('amount', ''))
     client_name = str(client_data.get('customer_name', ''))
     client_contact = int(client_data.get(

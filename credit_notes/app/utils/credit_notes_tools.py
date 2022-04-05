@@ -5,7 +5,7 @@ import hashlib
 import logging
 import requests
 import datetime
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from credit_notes.app.settings.settings import settings
 from .common_vars import create_credit_note_request_obj
 from ..utils.db_connections_utils import (query_user_existing_installations,
@@ -133,7 +133,8 @@ def calculate_existing_credits(db_user_existing_credit_invoices):
             aggregated_credit_sum = db_user_existing_credit_invoices[
                                     0]['item_price']
         except TypeError:
-            aggregated_credit_sum = db_user_existing_credit_invoices[0].item_price
+            aggregated_credit_sum = db_user_existing_credit_invoices[
+                                    0].item_price
     return aggregated_credit_sum
 
 
@@ -143,7 +144,8 @@ def create_debit_note(credit_amount, client_name,
     invoice_url = settings.invoice_url
     invoice_request_headers = {"Content-Type": "application/json"}
     debit_request_data = {"installation_id": installation_id,
-                          "dispatch_data": datetime.datetime.now().strftime("%m/%d/%Y"),
+                          "dispatch_data": datetime.datetime.now(
+                              ).strftime("%m/%d/%Y"),
                           "customer_id": customer_id,
                           "dispatch_type": "DebitNote",
                           "account_id": account_id,
@@ -151,10 +153,18 @@ def create_debit_note(credit_amount, client_name,
                           "customer_names": client_name,
                           "msisdn": client_contact,
                           "debit_amount": credit_amount}
-    debit_note_invoice_number = requests.get(data=debit_request_data,
+
+    debit_note_invoice_number = requests.get(data=json.dumps(
+                                             debit_request_data),
                                              url=invoice_url,
                                              headers=invoice_request_headers)
-    return debit_note_invoice_number
+    request_status_code = debit_note_invoice_number.status_code
+    if request_status_code != 200 or 201:
+        return HTTPException(
+            status_code=400,
+            detail=f"Debit not created in Unleashed")
+    return Response(status_code=request_status_code,
+                    data=f"Debit note created successfully")
 
 
 def create_credit_note(client_id, credit_amount, credit_reason,
@@ -198,42 +208,42 @@ def confirm_existing_user_credit(client_id,
 
     # Deduct existing credit from amount sent in request
     existing_client_credit_value = aggregated_existing_credit - credit_amount
-    print(f'Pulled credits from db {aggregated_existing_credit}')
-    print(f'Credit amount from request {credit_amount}')
-    print(f'Remainder from deducting aggregated_existing_credit - credit_amount {existing_client_credit_value}')
-    print(f'Action to be performed {performing_action}')
 
-    if existing_client_credit_value > 0:
+    # Fetch db details for client
+    try:
+        installation_id = db_user_existing_credit_invoices[0].installation_id
+        customer_id = db_user_existing_credit_invoices[0].customer_id
+        account_id = db_user_existing_credit_invoices[0].account_id
+    except AttributeError:
+        return HTTPException(
+            status_code=404,
+            detail=f"Client {client_id} dispatch information cannot be found.")
+
+    if performing_action == 'Credit' and existing_client_credit_value > 0:
         # wrap this in try except block to capture
         # scenerios where user doesnt have dispatch
         # data created in production database
-        try:
-            installation_id = db_user_existing_credit_invoices[0].installation_id
-            customer_id = db_user_existing_credit_invoices[0].customer_id
-            account_id = db_user_existing_credit_invoices[0].account_id
-            if performing_action == 'Credit':
-                str_credit_amount = str(credit_amount)
-                if str_credit_amount.startswith('-'):
-                    updated_credit_amount = str_credit_amount.replace("-", '')
-                else:
-                    updated_credit_amount = credit_amount
-                credit_note_details = create_credit_note(str(client_id),
-                                                         updated_credit_amount,
-                                                         credit_reason,
-                                                         installation_id,
-                                                         account_id,
-                                                         customer_id)
-                return credit_note_details
-            elif performing_action == 'Debit':
-                debit_note_details = create_debit_note(credit_amount, client_name,
-                                                       client_contact, installation_id,
-                                                       account_id, customer_id)
-                return debit_note_details
-        except AttributeError:
-            return HTTPException(
-                status_code=404,
-                detail=f"Client {client_id} dispatch information cannot be found.")
+        str_credit_amount = str(credit_amount)
+        if str_credit_amount.startswith('-'):
+            updated_credit_amount = str_credit_amount.replace("-", '')
+        else:
+            updated_credit_amount = credit_amount
+        credit_note_details = create_credit_note(str(client_id),
+                                                 updated_credit_amount,
+                                                 credit_reason,
+                                                 installation_id,
+                                                 account_id,
+                                                 customer_id)
+        return credit_note_details
+    elif performing_action == 'Debit' and credit_amount > 0:
+        debit_note_details = create_debit_note(credit_amount, client_name,
+                                               client_contact, installation_id,
+                                               account_id, customer_id)
+        return debit_note_details
     else:
         return HTTPException(
             status_code=400,
-            detail=f"The account {client_id} does not have an subsequent Invoice")
+            detail=f"The account {client_id} does not have an subsequent Invoice."  # noqa
+                     "You were trying to perform {performing_action} where amount sent"  # noqa
+                     "In the request is {credit_amount} and there exists {existing_client_credit_value}"  # noqa
+                     "credit value in the db")
