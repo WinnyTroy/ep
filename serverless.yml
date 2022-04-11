@@ -17,7 +17,7 @@ functions:
   EPAPI:
     name: EP-serverless
     # CodeUri: credit_notes
-    handler: credit_notes.app.main.handler
+    handler: app.main.handler
     description: Unleashed Credit Notes Generator
     timeout: 5 # seconds
     memorySize: 1500 # mb
