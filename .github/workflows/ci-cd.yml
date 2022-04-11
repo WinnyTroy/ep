@@ -51,7 +51,7 @@ jobs:
       #   run: . venv/bin/activate && pytest
       - name: Create archive of dependencies
         run: |
-          cd ./venv/lib/python3.7/site-packages
+          cd ./venv/lib/python3.8/site-packages
           zip -r9 ../../../../ep-api.zip .
       - name: Add API files to Zip file
         run: cd ./ep-api && zip -g ../ep-api.zip -r .
