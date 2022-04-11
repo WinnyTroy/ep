@@ -42,10 +42,10 @@ app.add_middleware(
                    "Content-Type",
                    "X-Amz-Date",
                    "Access-Control-Allow-Origin"])
-# Initialize application by connecting with Database
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
+# # Initialize application by connecting with Database
+# @app.on_event("startup")
+# def on_startup():
+#     create_db_and_tables()
 
 
 # Include Routes
